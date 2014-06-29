@@ -1,0 +1,175 @@
+
+import java.io.IOException;
+import java.io.RandomAccessFile;
+import java.util.HashMap;
+
+public class TdIdf {
+	double totalDoc;
+	Logger objLog=new Logger();
+	ComputeScore objCompute=new ComputeScore();
+	public TdIdf(double N){
+		totalDoc=N;
+	}
+	public String SearchInFile(String term,String fileName) throws IOException
+	{
+		String postingList = "";
+		try
+		{
+			RandomAccessFile indexFile = new RandomAccessFile(fileName,"r");
+			indexFile.seek(0);
+			String line = indexFile.readLine();
+			String currentTerm="";
+			int index = line.indexOf("#");
+			currentTerm = line.substring(0,index);
+			if(currentTerm!= "")
+			{
+
+				if(currentTerm.compareTo(term)==0)
+				{				
+					objLog.logMessages("Loading posting list for '"+term+"' complete");
+
+					indexFile.close();
+					return line;
+				}
+				if(currentTerm.compareTo(term)>0)
+				{
+					indexFile.close();
+					return "";
+				}
+				long start = 0;
+				long end = indexFile.length();
+				while(start<=end)
+				{
+					currentTerm = "";
+					long mid = (start+end)/2;
+					indexFile.seek(mid);
+					indexFile.readLine();
+					line = indexFile.readLine();
+					int ind = line.indexOf("#");
+					currentTerm = line.substring(0,ind);
+					if(currentTerm != "")
+					{
+						if(currentTerm.compareTo(term) == 0)
+						{
+							objLog.logMessages("Loading posting list for '"+term+"' complete");
+							indexFile.close();
+							return line;
+
+						}
+						if(currentTerm.compareTo(term)>0)
+						{
+							end = mid-1;
+						}
+						if(currentTerm.compareTo(term)<0)
+						{
+							start = mid+1;
+						}
+					}
+					else
+					{
+						indexFile.close();
+						return "";
+					}
+				}
+			}
+			indexFile.close();
+		}
+		catch(Exception ex)
+		{
+			objLog.logMessages(ex);
+		}
+
+		return postingList;
+	}
+	/*public void mergePostingList(ArrayList<String> postingLists){
+//chow#4#635461-7,644218-2,654985-1,669916-1
+//		chowder#4#652914-1,655431-1,665001-1,671470-1
+		ArrayList<Integer> size=new ArrayList<Integer>(postingLists.size());
+		for(int i=0;i<postingLists.size();i++){
+			size.add(postingLists.get(i).length());
+		}
+        int smallest=size.get(0);
+        int index=0;
+		for(int j=1;j<size.size();j++){
+			int small=size.get(j);
+			if(small<=smallest){
+				smallest=small;
+			    index=j;
+			}
+
+		}
+		for(int k=0;k<postingLists.size();k++){
+			System.out.println(postingLists.get(index)+","+postingLists.get(k));
+			String output=Merge(postingLists.get(index),postingLists.get(k));
+		}
+			System.out.println(index);
+
+	}
+	public String Merge(String p1,String p2){
+		String answer="";
+
+		return answer;
+	}*/
+	public HashMap<String, Double> getQueryResults(String input) throws IOException{
+		input=input.toLowerCase();
+		String[] terms=input.split(" ");
+		HashMap<String,String> termFile=new HashMap<String,String>(terms.length);
+		HashMap<String,HashMap<String,Double>> TFIDF=new HashMap<String,HashMap<String,Double>>();
+		for(int i=0;i<terms.length;i++){
+			char val=terms[i].charAt(0);
+			int num=(int)val;
+			termFile.put(terms[i], findFilesNames(num));
+		}
+		for(String key:termFile.keySet()){
+			String List=SearchInFile(key,termFile.get(key));
+		//	String List=SearchInFile(key, "D:\\PS3\\indexFiles\\a-g.txt");
+			if(List!=""){
+				TFIDF.put(key, objCompute.computeTFIDF(List, totalDoc));
+			}	
+		}
+		HashMap<String,Double> hash0=TFIDF.get(terms[0]);
+		HashMap<String,Double> Collectivehash=new HashMap<String,Double>();
+		for(int l=1;l<terms.length;l++){
+			if(TFIDF.containsKey(terms[l])){
+				Collectivehash.putAll(objCompute.computeWeight(hash0,TFIDF.get(terms[l])));
+			
+			}
+		}
+		
+		return Collectivehash;
+	}
+
+
+	public String findFilesNames(int val) throws IOException{
+		String filename="";
+
+		try{
+			if(val>=97 && val<=103  ){
+			}
+			filename="D:\\PS3\\indexFiles\\a-g.txt";
+
+			if(val>=104 && val<=110){
+				filename="D:\\PS3\\indexFiles\\h-n.txt";
+
+			}
+			if(val>=111 && val<=117){
+				filename="D:\\PS3\\indexFiles\\o-u.txt";
+
+			}
+			if(val>=118 && val<=122){
+				filename="D:\\PS3\\indexFiles\\v-z.txt";
+
+			}
+			if((val>=32 && val<=64) ||(val>=123 && val<=126) ){
+				filename="D:\\PS3\\indexFiles\\SpecialChar.txt";
+			}
+		}
+		catch(Exception ex){
+			objLog.logMessages(ex);
+		}
+		return filename;
+	}
+
+
+}
+

@@ -1,0 +1,11 @@
+
+open(fh,"<D:/PS3/indexFiles/a-g.txt") or die "File does not exists";
+seek(fh,1,66662269);
+while($line=<fh>){
+	$pos=tell(fh);
+	if($pos==66662269){
+		$data=<fh>;
+		print $data;
+	}
+}
+close(fh);

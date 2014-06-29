@@ -1,0 +1,19 @@
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.util.HashMap;
+
+
+public class Main {
+
+	public static void main(String[] args) throws IOException {
+		// TODO Auto-generated method stub
+			CustomSearchEngine objSearch=new CustomSearchEngine(3000000);
+//		objSearch.StartSearchEngine();
+
+}
+
+}

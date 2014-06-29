@@ -1,0 +1,323 @@
+import java.io.File;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.RandomAccessFile;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Scanner;
+import java.util.StringTokenizer;
+
+public class TdIdf {
+
+
+
+	Logger objLog=new Logger();
+	private Scanner scanner;
+	private String indexFileName;
+	RandomAccessFile indexFile;
+	private String documentIndexFile;
+	/*public CustomSearchEngine()
+	{
+		try
+		{
+			scanner = new Scanner(System.in);
+			indexFileName = "F:\\sjsu docs\\Search engine\\InvertedIndex.txt";
+			indexFile = new RandomAccessFile(indexFileName, "rw");
+			documentIndexFile = "F:\\sjsu docs\\Search engine\\DocID.txt";
+		}
+		catch(Exception ex)
+		{
+
+		}
+	}*/
+	public void StartSearchEngine()
+	{
+		String userQuery;
+		String doAnotherSearch;
+
+		do
+		{
+			System.out.println("Please enter the search query");
+
+			userQuery = scanner.nextLine();
+			ArrayList<String> searchResults = GetQueryResults(userQuery);
+			DisplaySearchResults(searchResults);
+
+			System.out.println("Do you want to give a new query? (yes/no)");
+			doAnotherSearch = scanner.nextLine();
+		}while(doAnotherSearch.equalsIgnoreCase("yes"));
+	}
+	private ArrayList<String> GetQueryResults(String userQuery)
+	{
+		ArrayList<String> searchResults = new ArrayList<String>();
+		ArrayList<String> terms = GetTermsFromQuery(userQuery);
+
+		for(int i = 0; i<terms.size(); i++)
+		{			
+			if(searchResults.size() == 0)
+			{
+				searchResults = GetPostingListForTerm(terms.get(i));
+			}
+			else
+			{
+				List<String> currentPostingList = GetPostingListForTerm(terms.get(i));
+				searchResults = GetIntersectedResults(currentPostingList, searchResults);
+			}
+		}
+		return searchResults;	
+	}
+	private ArrayList<String> GetTermsFromQuery(String userQuery)
+	{
+		userQuery = userQuery.replaceAll("[=\\-+#()|\"'.,;:\\*\\?!<>/_]", " ");
+
+
+		ArrayList<String> terms = new ArrayList<String>();
+		StringTokenizer stringTokenizer = new StringTokenizer(userQuery, " ", false);
+		while(stringTokenizer.hasMoreTokens())
+		{
+			terms.add(stringTokenizer.nextToken().toLowerCase());
+		}
+
+		return terms;
+	}
+	private ArrayList<String> GetPostingListForTerm(String term)
+	{
+		return SearchInFile(term);
+	}
+
+	private void DisplaySearchResults(ArrayList<String> searchResults)
+	{
+		String doYouWantToContinue;
+		List<String> documentNames = GetDocumentNamesFromIds(searchResults);
+		for(int i = 0; i < documentNames.size(); i++){
+			String result = documentNames.get(i);
+			System.out.println(result);
+			if((i+1)%10 == 0)
+			{
+				System.out.println("");
+				System.out.println("Do you want to see the next 10 results? (yes/no)");
+				doYouWantToContinue = scanner.nextLine();
+				if(doYouWantToContinue.compareToIgnoreCase("yes") != 0)
+				{
+					return;
+				}
+			}
+		}
+	}
+	private ArrayList<String> GetIntersectedResults(List<String> currentPostingList, List<String> existingPostingList)
+	{
+		ArrayList<String> intersectedList = new ArrayList<String>();
+		int i = 0;
+		int j = 0;
+		long curr;
+		long existing;
+		while(i<currentPostingList.size() && j < existingPostingList.size())
+		{
+			curr = Long.parseLong(currentPostingList.get(i));
+			existing = Long.parseLong(existingPostingList.get(j));
+
+			if(curr == existing)
+			{
+				intersectedList.add(curr+"");
+				i++;
+				j++;
+			}
+			else if(curr<existing)
+			{
+				i++;
+			}
+			else if(curr>existing)
+			{
+				j++;
+			}			
+		}
+		return intersectedList;
+	}
+	public ArrayList<String> SearchInFile(String term)
+	{
+		ArrayList<String> postingList = new ArrayList<String>();
+		try
+		{
+			indexFile.seek(0);
+			String line = indexFile.readLine();
+			StringTokenizer tokenizer = new StringTokenizer(line, "#,", false);
+			String currentTerm="";
+			if(tokenizer.hasMoreTokens())
+			{
+				currentTerm = tokenizer.nextToken();
+			}
+			if(currentTerm!= "")
+			{
+				if(currentTerm.compareTo(term)==0)
+				{
+					while(tokenizer.hasMoreTokens())
+					{
+						postingList.add(tokenizer.nextToken());
+					}
+					return postingList;
+				}
+				if(currentTerm.compareTo(term)>0)
+				{
+					return postingList;
+				}
+				long start = 0;
+				long end = indexFile.length();
+				while(start<=end)
+				{
+					currentTerm = "";
+					long mid = (start+end)/2;
+					indexFile.seek(mid);
+					indexFile.readLine();
+					line = indexFile.readLine();
+					tokenizer = new StringTokenizer(line, "#,", false);
+					if(tokenizer.hasMoreTokens())
+					{
+						currentTerm = tokenizer.nextToken();
+					}
+					if(currentTerm != "")
+					{
+						if(currentTerm.compareTo(term) == 0)
+						{
+							while(tokenizer.hasMoreTokens())
+							{
+								postingList.add(tokenizer.nextToken());
+							}
+							return postingList;
+						}
+						if(currentTerm.compareTo(term)>0)
+						{
+							end = mid-1;
+						}
+						if(currentTerm.compareTo(term)<0)
+						{
+							start = mid+1;
+						}
+					}
+					else
+					{
+						return new ArrayList<String>();
+					}
+				}
+			}
+		}
+		catch(Exception ex)
+		{
+
+		}
+		return postingList;
+	}
+
+	public ArrayList<String> GetDocumentNamesFromIds(ArrayList<String> searchResults)
+	{
+		ArrayList<String>ParsedDocument=new ArrayList<String>();
+		try{
+
+			File fileName=new File(documentIndexFile);
+			Scanner scnr=new Scanner(fileName);
+			HashMap<String, String> hash=new HashMap<String,String>();
+
+			while(scnr.hasNext()){
+				String line=scnr.nextLine();
+				StringTokenizer stringtokenizer = new StringTokenizer(line, "->");
+				String docID=stringtokenizer.nextToken();
+				hash.put(docID, stringtokenizer.nextToken());
+			}
+			scnr.close();
+			for(String ele:searchResults ){
+				String value=hash.get(ele);
+				ParsedDocument.add(value);
+			}
+		}
+		catch(Exception ex){
+			//CreateLog.LogMessage(ex.getMessage());
+		}
+		return ParsedDocument;
+
+
+	}
+	public ArrayList<String>BinarySearch(RandomAccessFile reader,long i,long j){
+		ArrayList<String> postingList=new ArrayList<String>();
+
+		return postingList;
+	}
+	public ArrayList<String> getPostingLists(String key,String fileName) throws IOException{
+		ArrayList<String> postingList=new ArrayList<String>();
+		RandomAccessFile fileReader=new RandomAccessFile(fileName,"r");
+		long start=0;
+		long end=fileReader.length();
+		postingList=BinarySearch(fileReader,start,end);
+		long pointer=0;
+
+
+		while(start<=end){
+			long mid=(start+end)/2;
+			while(fileReader.readLine().indexOf("#")==-1){
+				mid=mid--;
+				fileReader.readLine();
+				pointer=fileReader.getFilePointer();
+			}
+			String line=fileReader.readLine();
+			String[] tokens=line.split("#");
+			if(key.compareTo(tokens[0])<0){
+				postingList=BinarySearch(fileReader,start,pointer);
+			}
+			else{
+				postingList=BinarySearch(fileReader,pointer+1,end);
+			}
+		}
+		return postingList;
+	}
+	public void getQueryFiles(String input) throws IOException{
+
+		input=input.toLowerCase();
+		String[] terms=input.split(" ");
+		HashMap<String,String> termFile=new HashMap<String,String>(terms.length);
+		ArrayList<ArrayList<String>> postingLists=new ArrayList<ArrayList<String>>();
+		for(int i=0;i<terms.length;i++){
+			char val=terms[i].charAt(0);
+			int num=(int)val;
+			termFile.put(terms[i], findFilesNames(num));
+		}
+		for(String key:termFile.keySet()){
+			postingLists.add(getPostingLists(key,termFile.get(key)));
+		}
+	}
+
+	public String findFilesNames(int val) throws IOException{
+		String filename="";
+
+		try{
+			if(val>=97 && val<=103  ){
+			}
+			filename="D:\\PS3\\indexFiles\\a-g.txt";
+
+			if(val>=104 && val<=110){
+				filename="D:\\PS3\\indexFiles\\h-n.txt";
+
+			}
+			if(val>=111 && val<=117){
+				filename="D:\\PS3\\indexFiles\\o-u.txt";
+
+			}
+			if(val>=118 && val<=122){
+				filename="D:\\PS3\\indexFiles\\v-z.txt";
+
+			}
+			if((val>=32 && val<=64) ||(val>=123 && val<=126) ){
+				filename="D:\\PS3\\indexFiles\\SpecialChar.txt";
+			}
+		}
+		catch(Exception ex){
+			objLog.logMessages(ex);
+		}
+		return filename;
+	}
+
+
+}
+

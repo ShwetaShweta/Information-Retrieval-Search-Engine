@@ -1,0 +1,133 @@
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Scanner;
+import java.util.StringTokenizer;
+
+
+public class CustomSearchEngine {
+
+	private Scanner scanner;
+	private String documentIndexFile;
+	private double N;
+	HashMap<String,String> IndexMap=new HashMap<String,String>();
+	public CustomSearchEngine(double totalDocs)
+	{
+		try
+		{
+			scanner = new Scanner(System.in);
+			documentIndexFile = "D://PS3//Index.txt";
+			IndexMap=titleIndexMap();
+			N=totalDocs;
+		}
+		catch(Exception ex)
+		{
+
+		}
+	}
+	public HashMap<String,String> titleIndexMap() throws IOException{
+
+		BufferedReader reader=new BufferedReader(new FileReader(new File(documentIndexFile)));
+		HashMap<String,String> titleIndex=new HashMap<String,String>();
+		String readLine="";
+		while((readLine=reader.readLine())!=null){
+			String[] 	arr=readLine.split("#");
+			titleIndex.put(arr[1], arr[0]);
+		}
+		reader.close();
+		return titleIndex;
+	}
+	public void StartSearchEngine() throws IOException
+	{
+		String userQuery;
+		String doAnotherSearch;
+
+		do
+		{
+			System.out.println("Please enter the search query");
+
+			userQuery = scanner.nextLine();
+			TdIdf obj=new TdIdf(N);
+			HashMap<String, Double> resultHash=obj.getQueryResults(userQuery);
+			ArrayList<String> searchResults = sortByComparator(resultHash);
+			System.out.println(searchResults);
+			DisplaySearchResults(searchResults);
+
+			System.out.println("Do you want to give a new query? (yes/no)");
+			doAnotherSearch = scanner.nextLine();
+		}while(doAnotherSearch.equalsIgnoreCase("yes"));
+	}
+
+	public ArrayList sortByComparator(Map<String,Double> unSortedHash){
+		List list=new LinkedList(unSortedHash.entrySet());
+		Collections.sort(list,new Comparator(){
+			public int compare(Object o1,Object o2){
+				return ((Comparable) ((Map.Entry) (o1)).getValue())
+						.compareTo(((Map.Entry) (o2)).getValue());
+			}
+		});
+
+		Map sortedMap = new LinkedHashMap();
+		for (Iterator it = list.iterator(); it.hasNext();) {
+			Map.Entry entry = (Map.Entry) it.next();
+			sortedMap.put(entry.getKey(), entry.getValue());
+		}
+		ArrayList sortedOutput=new ArrayList<>(sortedMap.keySet());
+		for(Object keys:sortedMap.keySet()){
+			sortedOutput.add(keys);
+		}
+		return sortedOutput;
+
+
+	}
+
+	public ArrayList<String> GetDocumentNamesFromIds(ArrayList<String> searchResults)
+	{
+		ArrayList<String>ParsedDocument=new ArrayList<String>();
+		try{
+			for(String ele:searchResults ){
+				if(IndexMap.containsKey(ele)){
+					ParsedDocument.add(IndexMap.get(ele));
+				}
+			}
+		}
+		catch(Exception ex){
+			//CreateLog.LogMessage(ex.getMessage());
+		}
+		return ParsedDocument;
+
+
+	}
+	private void DisplaySearchResults(ArrayList<String> searchResults)
+	{
+		String doYouWantToContinue;
+		List<String> documentNames = GetDocumentNamesFromIds(searchResults);
+		for(int i = 0; i < documentNames.size(); i++){
+			String result = documentNames.get(i);
+			System.out.println(result);
+			if((i+1)%10 == 0)
+			{
+				System.out.println("");
+				System.out.println("Do you want to see the next 10 results? (yes/no)");
+				doYouWantToContinue = scanner.nextLine();
+				if(doYouWantToContinue.compareToIgnoreCase("yes") != 0)
+				{
+					return;
+				}
+			}
+		}
+	}
+
+}

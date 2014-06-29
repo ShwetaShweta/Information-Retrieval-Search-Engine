@@ -1,0 +1,8 @@
+ Unix Command used to sort file
+ sort -s -n -k2 Indegree.txt>>d:/ps3/IndegreeSorted.txt
+ split -b 18432k IndegreeSort.txt Segment
+ 
+ 	//		File folder = new File("D:\\PS3\\indexFiles\\");
+		//		File[] listOfFiles = folder.listFiles();
+
+ 

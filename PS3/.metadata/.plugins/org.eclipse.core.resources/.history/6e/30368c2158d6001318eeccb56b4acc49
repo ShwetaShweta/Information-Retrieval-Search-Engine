@@ -1,0 +1,32 @@
+import java.util.HashMap;
+
+
+public class ComputeScore {
+	//chow#4#635461-7(tf for doc 635461),644218-2,654985-1,669916-1
+	public HashMap<String,Double> computeTFIDF(String postingList,Double N){
+		int startIndex=postingList.indexOf('#');
+		int endIndex=postingList.indexOf('#',startIndex+1);	
+		int docFreq=Integer.parseInt(postingList.substring(startIndex+1,endIndex));
+		Double InverseDocFreq=Math.log10(N/docFreq);
+	System.out.println(InverseDocFreq);
+		String substring=postingList.substring(endIndex+1,postingList.length());
+		String[] arr=substring.split(",");
+		HashMap<String,Double> tfIDF=new HashMap<String,Double>(arr.length);
+		for(int i=0;i<arr.length;i++){
+			String []subArr=arr[i].split("-");
+			if(Double.parseDouble(subArr[1])>0){
+				double val=Double.parseDouble(subArr[1]);
+				val=Math.log10(val);
+				val=val*InverseDocFreq;
+				tfIDF.put(subArr[0], val);
+			}
+			else{
+				tfIDF.put(subArr[0], Double.parseDouble("0"));
+			}
+		}
+
+		
+		return tfIDF;
+	}
+	
+}

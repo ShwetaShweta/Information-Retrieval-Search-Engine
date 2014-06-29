@@ -1,0 +1,13 @@
+import java.io.BufferedReader;
+
+public class Main {
+
+	public static void main(String[] args) throws IOException {
+		// TODO Auto-generated method stub
+		double collectionFrequency=3000000;
+		CustomSearchEngine objSearch=new CustomSearchEngine(collectionFrequency);
+      	objSearch.StartSearchEngine();
+
+}
+
+}

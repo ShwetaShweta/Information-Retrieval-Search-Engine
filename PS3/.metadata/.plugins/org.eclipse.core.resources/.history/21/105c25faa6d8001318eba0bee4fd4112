@@ -1,0 +1,155 @@
+import java.io.BufferedReader;
+import java.io.FileReader;
+
+
+public class Helper {
+	public static void PrintDocContents(String docId)
+	{
+		try
+		{
+			BufferedReader reader = new BufferedReader(new FileReader(FileNames.srcFile));
+			reader.readLine();
+			String line = reader.readLine();
+			
+			while(line != null)
+			{
+				int ind = line.indexOf("</$id>");
+				
+				line = line.substring(5, ind);
+				StringBuffer bodyContents = new StringBuffer();
+				
+				String body = reader.readLine();
+				while(body != null)
+				{
+					bodyContents.append(body+" ");
+					if(!body.endsWith("</$text>"))
+					{
+						body = reader.readLine();
+					}
+					else
+					{
+						break;
+					}
+				}
+				body = bodyContents.toString();
+				
+	
+				if(line == docId)
+				{
+					System.out.println(body);
+					return;
+				}
+				else
+				{
+					System.out.println(line);
+					reader.readLine();
+					reader.readLine();
+					line = reader.readLine();
+				}
+			}
+		}
+		catch(Exception ex)
+		{
+			
+		}
+	}
+	public static void TestProcess()
+	{
+		try
+		{
+			BufferedReader reader = new BufferedReader(new FileReader("/home/sri/sjsu docs/Search engine/assignment 3/test"));
+			String line = reader.readLine();
+			String contents = "";
+			while(line !=null)
+			{
+				contents += line;
+				contents+=" ";
+				line = reader.readLine();
+				
+			}
+	        contents = 	ProcessPageContent(contents);	
+		}
+		catch(Exception ex)
+		{
+			
+		}
+	}
+	private static String ProcessPageContent(String text)
+	{
+		text = text.replaceAll("&ndash;", " ");
+		text = text.replaceAll("[=][=][=].*?[=][=][=]", ""); 
+	    text = text.replaceAll("[=][=].*?[=][=]", ""); 
+	    text = text.replaceAll("[=\\-+#()|\"'.,;:\\*\\?!_]", " "); 
+	    
+		text = Process(text);
+		
+		text = text.replaceAll("(?s)[&][l][t][;][r][e][f].*?[&][g][t][;].*?[&][l][t][;][/][r][e][f].*?[&][g][t][;]", ""); 
+	    text = text.replaceAll("(?s)[<][r][e][f].*?[>].*?[<][/][r][e][f].*?[>]", ""); 
+	    text = text.replaceAll("(?s)[&][l][t][;][r][e][f].*?[/][&][g][t][;]", ""); 
+	    text = text.replaceAll("(?s)[<][r][e][f].*?[>].*?[<][/][>]", ""); 
+		
+	    text = text.replaceAll("\\/", ""); 
+	    text = text.replaceAll("([\\[][\\[])|([\\]][\\]])|([{][{])|([}][}])", " "); 
+	    text = text.replaceAll("[\\[].*?[\\]]", ""); 
+	    text = text.replaceAll("&nbsp", ""); 
+	    text = text.replaceAll("[<>!]",""); 
+	    text = text.replaceAll("&lt", " ");
+	    text = text.replaceAll("&gt", " ");
+	    
+	    text = text.replaceAll("[ ]+", " ");
+		return text;
+	}
+	public static String Process(String text)
+	{
+		StringBuffer buf = new StringBuffer();
+		int i = 0;
+		boolean skip = false;
+		int length = text.length();
+		int nesting = 0;
+		while(i<length)
+		{
+			if(text.charAt(i) == '{' && i+1 < length && text.charAt(i+1) == '{' )
+			{
+				nesting++;
+			}
+			if(text.charAt(i) == '}' && i+1 < length && text.charAt(i+1) == '}')
+			{
+				nesting--;
+			}
+			if(!skip)
+			{
+				if(text.charAt(i) == '{' && i+1 < length && text.charAt(i+1) == '{' )
+				{
+					skip = true;
+					i +=2;
+				}
+				else
+				{
+					buf.append(text.charAt(i));
+					i++;
+				}
+				
+			}
+			else
+			{
+			    if(text.charAt(i) == '}' && i+1 < length && text.charAt(i+1) == '}')
+			    {
+			    	if(nesting == 0)
+			    	{
+				    	skip = false;
+			    	}
+				    i = i+2;
+			    	
+			    }
+			    else
+			    {
+			    	i++;
+			    }
+			}
+			
+			
+		}
+		return buf.toString();
+	}
+
+}

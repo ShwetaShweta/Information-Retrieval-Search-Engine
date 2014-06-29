@@ -1,0 +1,33 @@
+import java.io.IOException;
+
+
+public class Main {
+
+	public static void main(String[] args) throws IOException {
+		// TODO Auto-generated method stub
+		//String file="D:\\Assignment3FilesUsed\\version_1.xml";
+		//objLog.logMessages("Run Starts ");
+				//ComputingIndegree objIndegree=new ComputingIndegree(file, length);
+				//objIndegree.findOutlinks();
+				//	objIndegree.findIndegree();
+				//objLog.logMessages("Run ends");
+		//String file="D:\\Assignment3FilesUsed\\output2.txt";
+		//	int length=5160094;
+		//	Logger objLog=new Logger();
+
+
+
+
+
+
+		CustomSearchEngine objSearch=new CustomSearchEngine(3000000);
+		objSearch.StartSearchEngine();
+		
+
+
+
+		
+
+	}
+
+}

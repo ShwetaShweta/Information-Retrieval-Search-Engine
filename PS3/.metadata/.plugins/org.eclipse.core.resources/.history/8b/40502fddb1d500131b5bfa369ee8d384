@@ -1,0 +1,5 @@
+open(fh,"<D:\PS3\indexFiles\a-g.txt");
+seek(fh,0,66662269);
+$line=<fh>;
+print $line;
+close(fh);

@@ -1,0 +1,11 @@
+
+open(fh,'<D:/PS3/SearchEngine/documentIdMap.txt') or die "File does not exists";
+@Array="";
+while($line=<fh>){
+	push(@Array,$line);
+}
+close(fh);
+@SortedArray=sort @Array;
+open(fh,">D:/PS3/SearchEngine/SorteddocumentIdMap.txt")
+print fh join(",",@SortedArray));
+close fh;

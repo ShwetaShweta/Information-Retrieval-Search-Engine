@@ -1,0 +1,34 @@
+import java.util.HashMap;
+
+
+public class ComputeScore {
+	//chow#4#635461-7(tf for doc 635461),644218-2,654985-1,669916-1
+	public void computeTFIDF(String term,String postingList,Double N){
+		int startIndex=postingList.indexOf('#');
+		int endIndex=postingList.indexOf('#',startIndex+1);	
+		int docFreq=Integer.parseInt(postingList.substring(startIndex+1,endIndex));
+		Double InverseDocFreq=Math.log10(docFreq/N);
+		String substring=postingList.substring(endIndex+1,postingList.length());
+		String[] arr=substring.split(",");
+		HashMap<String,Double> tf=new HashMap<String,Double>(arr.length);
+		for(int i=0;i<arr.length;i++){
+			String []subArr=arr[i].split("-");
+			if(Double.parseDouble(subArr[1])>0){
+				double val=Double.parseDouble(subArr[1]);
+				val=Math.log10(val);
+				tf.put(subArr[0], val);
+			}
+			else{
+				tf.put(subArr[0], Double.parseDouble("0"));
+			}
+		}
+
+		for(String elements:tf.keySet()){
+			System.out.println(elements+"->"+tf.get(elements));
+		}
+	}
+	public static void main(String[] args) {
+		ComputeScore obj=new ComputeScore();
+		obj.computeTFIDF("jesus", "chow#4#635461-7,644218-2,654985-1,669916-1",Double.parseDouble("3000000"));
+	}
+}
